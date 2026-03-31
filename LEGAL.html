@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LexAI India v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Noto+Sans+Tamil:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C9A84C;--gold-dim:#9A7B35;--gold-bg:rgba(201,168,76,0.1);
+  --bg:#0B0D12;--panel:#11141A;--card:#171B23;--input:#1B1F2B;
+  --bdr:rgba(201,168,76,0.18);--bdr-s:rgba(255,255,255,0.055);
+  --t1:#E8E4D9;--t2:#8A8880;--t3:#4E4C4A;
+  --user:#192333;--ai:#141820;
+  --blue:#7CB3D4;--blue-bg:rgba(74,127,165,0.1);
+  --green:#6DC49A;--green-bg:rgba(58,138,90,0.1);
+  --amber:#E0A06A;--amber-bg:rgba(196,119,58,0.1);
+  --red:#D47C7C;--red-bg:rgba(165,74,74,0.1);
+  --purple:#B09AE8;--purple-bg:rgba(122,90,201,0.1);
+  --teal:#5DCAA5;--teal-bg:rgba(93,202,165,0.1);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+ 
+/* ─── API GATE ─── */
+.gate{position:fixed;inset:0;background:rgba(11,13,18,0.97);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+.gate-box{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:2rem 2rem 1.75rem;width:420px;max-width:93vw;text-align:center}
+.gate-seal{width:52px;height:52px;margin:0 auto 1.2rem;border:1.5px solid var(--gold-dim);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.gate-box h2{font-family:'Playfair Display',serif;font-size:20px;color:var(--t1);margin-bottom:.5rem}
+.gate-box p{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:1.25rem}
+.gate-input{width:100%;background:var(--input);border:1px solid var(--bdr-s);border-radius:8px;padding:.65rem .9rem;font-size:13px;color:var(--t1);outline:none;font-family:'DM Sans',sans-serif;margin-bottom:.65rem;transition:border-color .2s}
+.gate-input:focus{border-color:var(--gold-dim)}
+.gate-btn{width:100%;padding:.7rem;background:var(--gold);color:#0B0D12;border:none;border-radius:8px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.gate-btn:hover{background:#DDB85A}
+.gate-err{font-size:11.5px;color:var(--red);margin-bottom:.5rem;display:none}
+.gate-hint{font-size:11px;color:var(--t3);margin-top:.75rem;line-height:1.5}
+.gate-hint a{color:var(--gold-dim)}
+ 
+/* ─── TOPBAR ─── */
+.topbar{display:flex;align-items:center;padding:0 1.25rem;height:52px;border-bottom:1px solid var(--bdr-s);background:var(--panel);flex-shrink:0;gap:.6rem}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-right:.5rem}
+.logo-text{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--gold);letter-spacing:.01em}
+.logo-sub{font-size:9px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase}
+.top-sep{width:1px;height:20px;background:var(--bdr-s);flex-shrink:0}
+.tb-btn{font-size:11.5px;padding:4px 10px;border:1px solid var(--bdr-s);border-radius:20px;color:var(--t2);cursor:pointer;transition:all .15s;background:none;white-space:nowrap}
+.tb-btn:hover,.tb-btn.active{border-color:var(--bdr);color:var(--gold);background:var(--gold-bg)}
+.tb-btn.hi{border-color:var(--bdr);color:var(--gold)}
+.state-sel{font-size:11.5px;background:var(--card);border:1px solid var(--bdr-s);color:var(--t2);padding:4px 8px;border-radius:6px;cursor:pointer;outline:none}
+.state-sel option{background:var(--card)}
+.lang-tog{display:flex;border:1px solid var(--bdr-s);border-radius:20px;overflow:hidden;flex-shrink:0}
+.lang-btn{font-size:11.5px;padding:4px 10px;cursor:pointer;color:var(--t2);transition:all .15s}
+.lang-btn.active{background:var(--gold);color:#0B0D12;font-weight:500}
+.key-pill{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border:1px solid var(--bdr-s);border-radius:20px;cursor:pointer;color:var(--t3)}
+.key-pill:hover{border-color:var(--bdr);color:var(--t2)}
+.kdot{width:6px;height:6px;border-radius:50%}
+.ml-auto{margin-left:auto}
+ 
+/* ─── LAYOUT ─── */
+.layout{display:flex;flex:1;overflow:hidden}
+ 
+/* ─── SIDEBAR ─── */
+.sidebar{width:200px;background:var(--panel);border-right:1px solid var(--bdr-s);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;scrollbar-width:thin}
+.sb-sec{padding:.8rem 0}
+.sb-ttl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);padding:0 1rem .55rem}
+.sb-item{display:flex;align-items:center;gap:7px;padding:.48rem 1rem;font-size:12px;color:var(--t2);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
+.sb-item:hover{background:rgba(255,255,255,0.025);color:var(--t1)}
+.sb-item.on{color:var(--gold);border-left-color:var(--gold);background:var(--gold-bg)}
+.sb-dot{width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sb-div{height:1px;background:var(--bdr-s);margin:.4rem 1rem}
+.mode-btn{display:flex;align-items:center;gap:7px;padding:.45rem 1rem;font-size:12px;color:var(--t2);cursor:pointer;transition:all .15s}
+.mode-btn:hover{background:rgba(255,255,255,0.025);color:var(--t1)}
+.mode-btn.on{color:var(--blue);background:var(--blue-bg)}
+.mi{font-size:13px;width:14px;text-align:center;flex-shrink:0}
+.notice{margin:.6rem .85rem;padding:.6rem .75rem;border:1px solid var(--bdr);border-radius:6px;background:var(--gold-bg)}
+.notice strong{font-size:9px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:3px}
+.notice p{font-size:10.5px;color:var(--t3);line-height:1.5}
+ 
+/* ─── MAIN AREA ─── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+ 
+/* ─── TABS ─── */
+.tabs{display:flex;border-bottom:1px solid var(--bdr-s);background:var(--panel);flex-shrink:0}
+.tab{padding:.55rem 1.1rem;font-size:12px;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--t1)}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+ 
+/* ─── PANELS ─── */
+.panel{display:none;flex:1;flex-direction:column;overflow:hidden}
+.panel.on{display:flex}
+ 
+/* ─── CTX BAR ─── */
+.ctx-bar{padding:.45rem 1.25rem;background:var(--panel);border-bottom:1px solid var(--bdr-s);display:flex;align-items:center;gap:.55rem;flex-shrink:0;flex-wrap:wrap}
+.ctx-tag{font-size:10.5px;padding:2px 8px;border-radius:4px}
+.ct-area{background:var(--blue-bg);color:var(--blue)}
+.ct-state{background:var(--green-bg);color:var(--green)}
+.ct-mode{background:var(--purple-bg);color:var(--purple)}
+.ct-lang{background:var(--amber-bg);color:var(--amber)}
+.clr-btn{margin-left:auto;font-size:10.5px;padding:2px 8px;border:1px solid var(--bdr-s);border-radius:4px;color:var(--t3);cursor:pointer;background:none}
+.clr-btn:hover{color:var(--t2);border-color:var(--bdr)}
+ 
+/* ─── MESSAGES ─── */
+.msgs{flex:1;overflow-y:auto;padding:1.4rem 1.4rem 1rem;display:flex;flex-direction:column;gap:1.1rem;scrollbar-width:thin;scrollbar-color:var(--card) transparent}
+.msgs::-webkit-scrollbar{width:3px}
+.msgs::-webkit-scrollbar-thumb{background:var(--card);border-radius:2px}
+ 
+/* ─── WELCOME ─── */
+.welcome{text-align:center;padding:2rem 1rem;max-width:540px;margin:auto}
+.w-seal{width:50px;height:50px;margin:0 auto 1.1rem;border:1.5px solid var(--gold-dim);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.welcome h2{font-family:'Playfair Display',serif;font-size:19px;margin-bottom:.45rem}
+.welcome .wsub{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:1.3rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{font-size:11.5px;padding:5px 12px;border:1px solid var(--bdr);border-radius:20px;color:var(--t2);cursor:pointer;transition:all .15s;background:var(--card)}
+.chip:hover{border-color:var(--gold-dim);color:var(--gold);background:var(--gold-bg)}
+ 
+/* ─── MSG BUBBLES ─── */
+.msg{display:flex;gap:9px;max-width:860px}
+.msg.usr{flex-direction:row-reverse;margin-left:auto}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px}
+.av.ai{background:var(--gold-bg);border:1px solid var(--bdr);color:var(--gold);font-family:'Playfair Display',serif;font-weight:600}
+.av.usr{background:var(--blue-bg);border:1px solid rgba(74,127,165,.3);color:var(--blue)}
+.bub{padding:.75rem .95rem;border-radius:10px;font-size:13.5px;line-height:1.72;max-width:700px}
+.bub.ai{background:var(--ai);border:1px solid var(--bdr-s);border-top-left-radius:2px}
+.bub.usr{background:var(--user);border:1px solid rgba(74,127,165,.18);border-top-right-radius:2px}
+.bub p{margin-bottom:.4rem}
+.bub p:last-child{margin-bottom:0}
+.bub ul,.bub ol{padding-left:1.2rem;margin-bottom:.45rem}
+.bub li{margin-bottom:.2rem}
+ 
+/* structured sections */
+.ls{margin:.7rem 0 .3rem;padding:.6rem .8rem;border-radius:7px;border-left:3px solid}
+.ls.why{border-color:var(--gold);background:var(--gold-bg)}
+.ls.scen{border-color:var(--blue);background:var(--blue-bg)}
+.ls.rts{border-color:var(--green);background:var(--green-bg)}
+.ls.stps{border-color:var(--amber);background:var(--amber-bg)}
+.ls.wrn{border-color:var(--red);background:var(--red-bg)}
+.ls.risk{border-color:var(--purple);background:var(--purple-bg)}
+.ls.sim{border-color:var(--teal);background:var(--teal-bg)}
+.ls-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:500;margin-bottom:.35rem;opacity:.85}
+.ls.why .ls-lbl{color:var(--gold)}
+.ls.scen .ls-lbl{color:var(--blue)}
+.ls.rts .ls-lbl{color:var(--green)}
+.ls.stps .ls-lbl{color:var(--amber)}
+.ls.wrn .ls-lbl{color:var(--red)}
+.ls.risk .ls-lbl{color:var(--purple)}
+.ls.sim .ls-lbl{color:var(--teal)}
+.ls-body{font-size:13px;line-height:1.65}
+.ls-body ul{padding-left:1rem;margin-top:.3rem}
+.ls-body li{margin-bottom:.2rem}
+.law-tag{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:3px;background:var(--gold-bg);color:var(--gold-dim);border:1px solid var(--bdr);margin:2px 3px 2px 0}
+.tag-row{margin:.55rem 0 .2rem;display:flex;flex-wrap:wrap}
+.disc{margin-top:.7rem;padding-top:.6rem;border-top:1px solid var(--bdr-s);font-size:11.5px;color:var(--t3);font-style:italic}
+ 
+/* risk meter */
+.risk-meter{display:flex;align-items:center;gap:.75rem;margin:.5rem 0}
+.risk-bar{flex:1;height:6px;background:var(--bdr-s);border-radius:3px;overflow:hidden}
+.risk-fill{height:100%;border-radius:3px;transition:width .4s}
+.risk-label{font-size:12px;font-weight:500;min-width:60px}
+ 
+/* doc preview */
+.doc-prev{background:#0F1820;border:1px solid var(--bdr);border-radius:8px;margin-top:.65rem;overflow:hidden}
+.doc-hd{padding:.5rem .9rem;background:var(--gold-bg);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.doc-t{font-size:11.5px;color:var(--gold);font-weight:500}
+.cp-btn{font-size:11px;padding:2px 9px;border:1px solid var(--bdr);border-radius:4px;color:var(--t2);cursor:pointer;background:none;transition:all .15s}
+.cp-btn:hover{color:var(--gold);border-color:var(--bdr)}
+.doc-bd{padding:.9rem;font-family:monospace;font-size:11.5px;color:var(--t2);white-space:pre-wrap;max-height:280px;overflow-y:auto;line-height:1.6}
+ 
+/* quiz card */
+.quiz-card{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:1rem;margin-top:.5rem}
+.quiz-q{font-size:13.5px;font-weight:500;margin-bottom:.75rem;line-height:1.5}
+.quiz-opts{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:.55rem .85rem;border:1px solid var(--bdr-s);border-radius:7px;font-size:13px;cursor:pointer;transition:all .15s;color:var(--t2)}
+.quiz-opt:hover{border-color:var(--bdr);color:var(--t1);background:rgba(255,255,255,0.03)}
+.quiz-opt.correct{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+.quiz-opt.wrong{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.quiz-exp{font-size:12.5px;color:var(--t2);margin-top:.65rem;line-height:1.55;padding-top:.55rem;border-top:1px solid var(--bdr-s)}
+ 
+/* lawyer card */
+.lawyer-card{background:var(--card);border:1px solid var(--bdr-s);border-radius:10px;padding:.85rem 1rem;display:flex;gap:.85rem;align-items:flex-start;margin:.35rem 0}
+.lawyer-av{width:38px;height:38px;border-radius:50%;background:var(--blue-bg);border:1px solid rgba(74,127,165,.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.lawyer-name{font-size:13.5px;font-weight:500;color:var(--t1)}
+.lawyer-meta{font-size:11.5px;color:var(--t2);margin:.15rem 0 .4rem}
+.lawyer-tags{display:flex;flex-wrap:wrap;gap:4px}
+.lawyer-tag{font-size:10.5px;padding:2px 7px;border-radius:3px;background:var(--blue-bg);color:var(--blue)}
+.lawyer-contact{display:flex;gap:6px;margin-top:.5rem}
+.lc-btn{font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid var(--bdr-s);color:var(--t2);cursor:pointer;background:none;transition:all .15s}
+.lc-btn:hover{border-color:var(--bdr);color:var(--gold)}
+ 
+/* FIR stepper */
+.fir-step{display:flex;gap:.85rem;margin-bottom:.75rem}
+.fir-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:500;flex-shrink:0;background:var(--gold-bg);border:1px solid var(--bdr);color:var(--gold)}
+.fir-content{flex:1;padding-top:2px}
+.fir-title{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:.2rem}
+.fir-body{font-size:12.5px;color:var(--t2);line-height:1.55}
+.fir-input{width:100%;background:var(--input);border:1px solid var(--bdr-s);border-radius:6px;padding:.5rem .75rem;font-size:12.5px;color:var(--t1);outline:none;font-family:'DM Sans',sans-serif;margin-top:.35rem;resize:none}
+.fir-input:focus{border-color:var(--gold-dim)}
+ 
+/* typing */
+.typing{display:flex;gap:4px;align-items:center;padding:.85rem .95rem}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--gold-dim);animation:pulse 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+ 
+/* ─── INPUT ─── */
+.inp-bar{padding:.75rem 1.25rem .9rem;background:var(--panel);border-top:1px solid var(--bdr-s);flex-shrink:0}
+.inp-wrap{display:flex;gap:7px;align-items:flex-end;background:var(--input);border:1px solid var(--bdr-s);border-radius:10px;padding:.55rem .65rem;transition:border-color .2s}
+.inp-wrap:focus-within{border-color:var(--gold-dim)}
+#inp{flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--t1);resize:none;max-height:100px;line-height:1.5;padding:2px 0}
+#inp::placeholder{color:var(--t3)}
+.voice-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--bdr-s);background:none;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:13px}
+.voice-btn:hover{border-color:var(--bdr);color:var(--t1)}
+.voice-btn.listening{border-color:var(--red);color:var(--red);background:var(--red-bg);animation:vp 1s ease-in-out infinite}
+.voice-btn.unsupported{opacity:.4;cursor:not-allowed}
+@keyframes vp{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+.voice-status{font-size:11px;padding:3px 9px;border-radius:4px;border:1px solid var(--bdr-s);color:var(--t3);display:none;align-items:center;gap:5px}
+.voice-status.show{display:flex}
+.voice-status.active{color:var(--red);border-color:var(--red-bg);background:var(--red-bg)}
+.voice-status.error{color:var(--amber);border-color:var(--amber-bg);background:var(--amber-bg)}
+.send-btn{width:30px;height:30px;border-radius:6px;border:none;background:var(--gold);color:#0B0D12;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.send-btn:hover{background:#DDB85A;transform:scale(1.04)}
+.send-btn:disabled{background:var(--card);color:var(--t3);cursor:not-allowed;transform:none}
+.inp-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem;padding:0 .15rem}
+.mt-row{display:flex;gap:5px;flex-wrap:wrap}
+.mt{font-size:10.5px;padding:3px 8px;border-radius:4px;border:1px solid var(--bdr-s);color:var(--t3);cursor:pointer;transition:all .15s}
+.mt:hover,.mt.on{border-color:var(--bdr);color:var(--purple);background:var(--purple-bg)}
+.hint{font-size:10.5px;color:var(--t3)}
+ 
+/* ─── DASHBOARD PANEL ─── */
+.dash{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.dash-card{background:var(--card);border:1px solid var(--bdr-s);border-radius:10px;padding:.9rem 1rem}
+.dash-num{font-size:22px;font-weight:500;color:var(--t1)}
+.dash-lbl{font-size:11px;color:var(--t2);margin-top:3px}
+.dash-sec-ttl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:.6rem}
+.hist-item{display:flex;align-items:flex-start;gap:.75rem;padding:.65rem 0;border-bottom:1px solid var(--bdr-s);cursor:pointer}
+.hist-item:hover .hist-q{color:var(--gold)}
+.hist-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--blue-bg)}
+.hist-q{font-size:13px;color:var(--t1);line-height:1.45;transition:color .15s}
+.hist-meta{font-size:11px;color:var(--t3);margin-top:2px}
+.alert-item{display:flex;gap:.75rem;padding:.65rem 0;border-bottom:1px solid var(--bdr-s)}
+.alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.alert-text{font-size:13px;color:var(--t1);line-height:1.45}
+.alert-date{font-size:11px;color:var(--t3);margin-top:2px}
+ 
+/* ─── QUIZ PANEL ─── */
+.quiz-panel{flex:1;overflow-y:auto;padding:1.25rem;scrollbar-width:thin}
+.qp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.qp-score{font-size:13px;color:var(--t2)}
+.qp-score span{color:var(--gold);font-weight:500}
+.progress-bar{height:4px;background:var(--bdr-s);border-radius:2px;margin-bottom:1.25rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s}
+.qp-card{background:var(--card);border:1px solid var(--bdr-s);border-radius:12px;padding:1.25rem;max-width:600px}
+.qp-num{font-size:10.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+.qp-q{font-size:15px;font-weight:500;color:var(--t1);line-height:1.5;margin-bottom:1rem}
+.qp-opts{display:flex;flex-direction:column;gap:7px;margin-bottom:1rem}
+.qp-opt{padding:.65rem .9rem;border:1px solid var(--bdr-s);border-radius:8px;font-size:13.5px;cursor:pointer;transition:all .15s;color:var(--t2);text-align:left}
+.qp-opt:hover:not(:disabled){border-color:var(--bdr);color:var(--t1);background:rgba(255,255,255,0.03)}
+.qp-opt.c{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+.qp-opt.w{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.qp-opt:disabled{cursor:default}
+.qp-exp{font-size:13px;color:var(--t2);line-height:1.6;padding:.75rem;background:var(--input);border-radius:7px;margin-bottom:.75rem}
+.qp-next{padding:.6rem 1.25rem;background:var(--gold);color:#0B0D12;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.qp-next:hover{background:#DDB85A}
+ 
+/* ─── MODAL ─── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100}
+.overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--bdr);border-radius:14px;width:500px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-hd{padding:.9rem 1.2rem;border-bottom:1px solid var(--bdr-s);display:flex;align-items:center;justify-content:space-between}
+.modal-hd h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold)}
+.m-close{background:none;border:none;color:var(--t2);font-size:17px;cursor:pointer}
+.modal-bd{padding:1.1rem;overflow-y:auto;flex:1}
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dtc{padding:.7rem .85rem;border:1px solid var(--bdr-s);border-radius:8px;cursor:pointer;transition:all .15s}
+.dtc:hover{border-color:var(--bdr);background:var(--gold-bg)}
+.dtc.sel{border-color:var(--gold);background:var(--gold-bg)}
+.dtc-ic{font-size:17px;margin-bottom:.3rem}
+.dtc-nm{font-size:13px;font-weight:500;color:var(--t1)}
+.dtc-ds{font-size:11px;color:var(--t3);margin-top:2px}
+.modal-btn{width:100%;margin-top:.9rem;padding:.65rem;background:var(--gold);color:#0B0D12;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.modal-btn:hover{background:#DDB85A}
+ 
+/* scanner */
+.scan-drop{border:2px dashed var(--bdr-s);border-radius:10px;padding:2rem;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1rem}
+.scan-drop:hover,.scan-drop.drag{border-color:var(--bdr);background:var(--gold-bg)}
+.scan-drop p{font-size:13px;color:var(--t2)}
+.scan-drop strong{color:var(--gold)}
+</style>
+</head>
+<body>
+ 
+<!-- API GATE -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-seal">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M11 1.5L2 6v4.5c0 4.9 3.5 9.5 9 10.75C16.5 20 20 15.4 20 10.5V6L11 1.5z" stroke="#C9A84C" stroke-width="1.1" fill="rgba(201,168,76,0.08)"/>
+        <path d="M7.5 11l2.5 2.5 4.5-4.5" stroke="#C9A84C" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h2>LexAI India v3</h2>
+    <p>Enter your Anthropic API key to access all 12 features. Key is held in memory only — never saved.</p>
+    <input class="gate-input" id="gateKey" type="password" placeholder="sk-ant-api03-..." onkeydown="if(event.key==='Enter')submitKey()">
+    <div class="gate-err" id="gateErr">Key must start with sk- and be at least 20 characters</div>
+    <button class="gate-btn" onclick="submitKey()">Connect to LexAI →</button>
+    <p class="gate-hint">Get your key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> · Free credits available</p>
+  </div>
+</div>
+ 
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="13" stroke="#C9A84C" stroke-width="1"/>
+      <path d="M8 9.5L14 6.5L20 9.5V13.5C20 17.5 14 21 14 21C14 21 8 17.5 8 13.5Z" stroke="#C9A84C" stroke-width="1" fill="rgba(201,168,76,0.08)"/>
+      <text x="14" y="16.5" text-anchor="middle" fill="#C9A84C" font-size="6.5" font-family="serif" font-weight="600">IA</text>
+    </svg>
+    <div><div class="logo-text">LexAI India</div><div class="logo-sub">v3 · NLP Legal AI</div></div>
+  </div>
+  <div class="top-sep"></div>
+  <select class="state-sel" id="stateSel" onchange="setLoc(this.value)">
+    <option>Tamil Nadu</option><option>Maharashtra</option><option>Karnataka</option>
+    <option>Delhi</option><option>West Bengal</option><option>Gujarat</option>
+    <option>Rajasthan</option><option>Uttar Pradesh</option><option>Kerala</option>
+    <option>Andhra Pradesh</option><option>Telangana</option>
+  </select>
+  <button class="tb-btn hi" onclick="openModal('doc')">📄 Generate Doc</button>
+  <button class="tb-btn" onclick="openModal('scan')">📷 Scan Document</button>
+  <button class="tb-btn" onclick="openModal('fir')">🧭 File FIR Guide</button>
+  <div class="top-sep"></div>
+  <div class="lang-tog">
+    <div class="lang-btn active" id="lEn" onclick="setLang('en')">EN</div>
+    <div class="lang-btn" id="lTa" onclick="setLang('ta')">தமிழ்</div>
+  </div>
+  <div class="key-pill ml-auto" onclick="resetKey()" title="Click to change key">
+    <div class="kdot" id="kdot" style="background:var(--red)"></div>
+    <span id="klabel">No Key</span>
+  </div>
+</div>
+ 
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-sec">
+      <div class="sb-ttl">Practice Areas</div>
+      <div class="sb-item on" onclick="setArea(this,'Contract Law')"><span class="sb-dot"></span>Contract Law</div>
+      <div class="sb-item" onclick="setArea(this,'Employment Law')"><span class="sb-dot"></span>Employment Law</div>
+      <div class="sb-item" onclick="setArea(this,'Property & Real Estate')"><span class="sb-dot"></span>Property & Real Estate</div>
+      <div class="sb-item" onclick="setArea(this,'Consumer Rights')"><span class="sb-dot"></span>Consumer Rights</div>
+      <div class="sb-item" onclick="setArea(this,'Family Law')"><span class="sb-dot"></span>Family Law</div>
+      <div class="sb-item" onclick="setArea(this,'Criminal Law (IPC/CrPC)')"><span class="sb-dot"></span>Criminal Law (IPC)</div>
+      <div class="sb-item" onclick="setArea(this,'Corporate & Company Law')"><span class="sb-dot"></span>Corporate Law</div>
+      <div class="sb-item" onclick="setArea(this,'RTI & Fundamental Rights')"><span class="sb-dot"></span>RTI & Rights</div>
+      <div class="sb-item" onclick="setArea(this,'Cyber Law (IT Act 2000)')"><span class="sb-dot"></span>Cyber Law (IT Act)</div>
+      <div class="sb-item" onclick="setArea(this,'Tax & GST Law')"><span class="sb-dot"></span>Tax & GST</div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">
+      <div class="sb-ttl">AI Modes</div>
+      <div class="mode-btn on" id="mb-explain" onclick="setMode(this,'explain')"><span class="mi">💡</span>Explain</div>
+      <div class="mode-btn" id="mb-scenario" onclick="setMode(this,'scenario')"><span class="mi">🧠</span>Scenario Reasoning</div>
+      <div class="mode-btn" id="mb-xai" onclick="setMode(this,'xai')"><span class="mi">📊</span>Explainable AI</div>
+      <div class="mode-btn" id="mb-rights" onclick="setMode(this,'rights')"><span class="mi">⚖️</span>Know Your Rights</div>
+      <div class="mode-btn" id="mb-risk" onclick="setMode(this,'risk')"><span class="mi">🎯</span>Risk Prediction</div>
+      <div class="mode-btn" id="mb-similar" onclick="setMode(this,'similar')"><span class="mi">🔍</span>Similar Cases</div>
+      <div class="mode-btn" id="mb-simple" onclick="setMode(this,'simple')"><span class="mi">📖</span>Law Simplifier</div>
+      <div class="mode-btn" id="mb-lawyer" onclick="setMode(this,'lawyer')"><span class="mi">🧑‍⚖️</span>Find a Lawyer</div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="notice">
+      <strong>⚠ Notice</strong>
+      <p>General legal information only. Not legal advice. Consult a licensed advocate for your matter.</p>
+    </div>
+  </div>
+ 
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab on" onclick="showTab('chat',this)">💬 Chat</div>
+      <div class="tab" onclick="showTab('dashboard',this)">🗂️ Dashboard</div>
+      <div class="tab" onclick="showTab('quiz',this)">🧩 Legal Quiz</div>
+      <div class="tab" onclick="showTab('alerts',this)">🔔 Law Alerts</div>
+    </div>
+ 
+    <!-- CHAT PANEL -->
+    <div class="panel on" id="panel-chat">
+      <div class="ctx-bar">
+        <span style="font-size:10.5px;color:var(--t3)">Context:</span>
+        <span class="ctx-tag ct-area" id="tArea">Contract Law</span>
+        <span class="ctx-tag ct-state" id="tState">Tamil Nadu</span>
+        <span class="ctx-tag ct-mode" id="tMode">Explain</span>
+        <span class="ctx-tag ct-lang" id="tLang">English</span>
+        <button class="clr-btn" onclick="clearChat()">Clear</button>
+      </div>
+      <div class="msgs" id="msgs">
+        <div class="welcome" id="welcome">
+          <div class="w-seal">
+            <svg width="21" height="21" viewBox="0 0 22 22" fill="none">
+              <path d="M11 1.5L2 6v4.5c0 4.9 3.5 9.5 9 10.75C16.5 20 20 15.4 20 10.5V6L11 1.5z" stroke="#C9A84C" stroke-width="1.1" fill="rgba(201,168,76,0.08)"/>
+              <path d="M7.5 11l2.5 2.5 4.5-4.5" stroke="#C9A84C" stroke-width="1.1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>LexAI India — உங்கள் சட்ட வழிகாட்டி</h2>
+          <p class="wsub">12 AI-powered legal features. Ask in English or Tamil. Covers all major Indian laws with state-specific guidance.</p>
+          <div class="chips">
+            <div class="chip" onclick="useP('My landlord refuses to return my security deposit in Tamil Nadu. What can I do?')">🏠 Landlord deposit issue</div>
+            <div class="chip" onclick="useP('My employer has not paid salary for 2 months. What are my rights under labour law?')">💼 Unpaid salary</div>
+            <div class="chip" onclick="useP('என் நுகர்வோர் உரிமைகள் என்ன? நான் ஏமாற்றப்பட்டேன்.')">நுகர்வோர் உரிமைகள்</div>
+            <div class="chip" onclick="useP('Someone is blackmailing me with private photos online. What law applies?')">💻 Cyber blackmail</div>
+            <div class="chip" onclick="useP('Explain Section 498A IPC with a real scenario and court outcome.')">⚖️ Section 498A scenario</div>
+            <div class="chip" onclick="useP('What is the risk level if I do not register my rental agreement?')">🎯 Risk: unregistered rent</div>
+            <div class="chip" onclick="useP('Find similar court cases to: employer not paying gratuity after 5 years of service.')">🔍 Similar cases: gratuity</div>
+            <div class="chip" onclick="useP('Simplify Section 138 of the Negotiable Instruments Act in plain language.')">📖 Simplify: NI Act S.138</div>
+          </div>
+        </div>
+      </div>
+      <div class="inp-bar">
+        <div class="inp-wrap">
+          <textarea id="inp" rows="1" placeholder="Ask your legal question in English or Tamil…" onkeydown="handleKey(event)" oninput="autoH(this)"></textarea>
+          <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Click to speak">🎤</button>
+          <span class="voice-status" id="voiceSt"></span>
+          <button class="send-btn" id="sendBtn" onclick="send()">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M1 13L13 7L1 1V5.5L9 7L1 8.5V13Z" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div class="inp-foot">
+          <div class="mt-row">
+            <span class="mt on" id="qt-explain" onclick="qMode(this,'explain')">💡 Explain</span>
+            <span class="mt" id="qt-scenario" onclick="qMode(this,'scenario')">🧠 Scenario</span>
+            <span class="mt" id="qt-xai" onclick="qMode(this,'xai')">📊 Why this law</span>
+            <span class="mt" id="qt-rights" onclick="qMode(this,'rights')">⚖️ Rights</span>
+            <span class="mt" id="qt-risk" onclick="qMode(this,'risk')">🎯 Risk</span>
+            <span class="mt" id="qt-similar" onclick="qMode(this,'similar')">🔍 Similar cases</span>
+            <span class="mt" id="qt-simple" onclick="qMode(this,'simple')">📖 Simplify</span>
+          </div>
+          <span class="hint">Shift+Enter for new line</span>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- DASHBOARD PANEL -->
+    <div class="panel" id="panel-dashboard">
+      <div class="dash" id="dashContent">
+        <div class="dash-grid">
+          <div class="dash-card"><div class="dash-num" id="dQueries">0</div><div class="dash-lbl">Queries this session</div></div>
+          <div class="dash-card"><div class="dash-num" id="dDocs">0</div><div class="dash-lbl">Documents generated</div></div>
+          <div class="dash-card"><div class="dash-num" id="dQuiz">0</div><div class="dash-lbl">Quiz questions answered</div></div>
+        </div>
+        <div>
+          <div class="dash-sec-ttl">Recent queries</div>
+          <div id="histList"><p style="font-size:13px;color:var(--t3)">No queries yet. Start chatting to see your history here.</p></div>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- QUIZ PANEL -->
+    <div class="panel" id="panel-quiz">
+      <div class="quiz-panel" id="quizContent"></div>
+    </div>
+ 
+    <!-- ALERTS PANEL -->
+    <div class="panel" id="panel-alerts">
+      <div class="dash" id="alertsContent">
+        <div class="dash-sec-ttl">Recent legal updates & alerts</div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--red)"></div><div><div class="alert-text">Digital Personal Data Protection Act 2023 — Rules expected to be notified in 2025. Affects all businesses handling Indian user data.</div><div class="alert-date">Jan 2025 · Privacy & Data</div></div></div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--amber)"></div><div><div class="alert-text">Bharatiya Nyaya Sanhita (BNS) 2023 replaces IPC 1860 from July 1, 2024. New section numbers apply for all offences.</div><div class="alert-date">Jul 2024 · Criminal Law</div></div></div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--amber)"></div><div><div class="alert-text">Bharatiya Nagarik Suraksha Sanhita (BNSS) replaces CrPC 1973. Includes 90-day timeline for police chargesheet.</div><div class="alert-date">Jul 2024 · Criminal Procedure</div></div></div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--green)"></div><div><div class="alert-text">Consumer Protection (E-Commerce) Rules 2020 amended — platforms must display country of origin on all products.</div><div class="alert-date">Jun 2024 · Consumer Rights</div></div></div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--blue)"></div><div><div class="alert-text">Tamil Nadu CM announces legal aid centers in all 234 assembly constituencies for free legal assistance.</div><div class="alert-date">Mar 2024 · Tamil Nadu</div></div></div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--green)"></div><div><div class="alert-text">Supreme Court: WhatsApp messages admissible as evidence in civil disputes if authenticated under Section 65B Evidence Act.</div><div class="alert-date">Feb 2024 · Evidence Law</div></div></div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--amber)"></div><div><div class="alert-text">GST Council: Input Tax Credit (ITC) matching mandatory from April 2024. Mismatches attract 18% interest.</div><div class="alert-date">Apr 2024 · Tax & GST</div></div></div>
+        <div class="alert-item"><div class="alert-dot" style="background:var(--blue)"></div><div><div class="alert-text">RERA: Builders must now upload quarterly construction photos on state RERA portals. Homebuyers can verify online.</div><div class="alert-date">Jan 2024 · Real Estate</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- DOC MODAL -->
+<div class="overlay" id="docModal">
+  <div class="modal">
+    <div class="modal-hd"><h3>📄 Legal Document Generator</h3><button class="m-close" onclick="closeModal('doc')">✕</button></div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:var(--t2);margin-bottom:1rem">Select template type — generated under Indian law with state-specific notes.</p>
+      <div class="doc-grid">
+        <div class="dtc sel" onclick="pickDoc(this,'rent_agreement')"><div class="dtc-ic">🏠</div><div class="dtc-nm">Rent Agreement</div><div class="dtc-ds">11-month residential lease</div></div>
+        <div class="dtc" onclick="pickDoc(this,'nda')"><div class="dtc-ic">🤝</div><div class="dtc-nm">NDA</div><div class="dtc-ds">Non-Disclosure Agreement</div></div>
+        <div class="dtc" onclick="pickDoc(this,'legal_notice')"><div class="dtc-ic">⚖️</div><div class="dtc-nm">Legal Notice</div><div class="dtc-ds">Formal demand / notice</div></div>
+        <div class="dtc" onclick="pickDoc(this,'employment_offer')"><div class="dtc-ic">💼</div><div class="dtc-nm">Offer Letter</div><div class="dtc-ds">Employment offer letter</div></div>
+        <div class="dtc" onclick="pickDoc(this,'affidavit')"><div class="dtc-ic">📋</div><div class="dtc-nm">Affidavit</div><div class="dtc-ds">General sworn statement</div></div>
+        <div class="dtc" onclick="pickDoc(this,'consumer_complaint')"><div class="dtc-ic">📢</div><div class="dtc-nm">Consumer Complaint</div><div class="dtc-ds">District Consumer Forum</div></div>
+      </div>
+      <button class="modal-btn" onclick="genDoc()">Generate Document →</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- SCAN MODAL -->
+<div class="overlay" id="scanModal">
+  <div class="modal">
+    <div class="modal-hd"><h3>📷 Document Scanner & Analyzer</h3><button class="m-close" onclick="closeModal('scan')">✕</button></div>
+    <div class="modal-bd">
+      <div class="scan-drop" id="scanDrop" onclick="document.getElementById('fileInput').click()" ondragover="ev.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')">
+        <p style="font-size:22px;margin-bottom:.5rem">📄</p>
+        <p><strong>Click to upload</strong> or drag a legal document here</p>
+        <p style="font-size:11.5px;margin-top:.35rem;color:var(--t3)">Supports PDF, JPG, PNG · AI will explain key clauses instantly</p>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFileUpload(this)">
+      <div id="scanStatus" style="font-size:13px;color:var(--t2);text-align:center;padding:.5rem 0"></div>
+      <p style="font-size:11.5px;color:var(--t3);line-height:1.5">The AI will identify: key clauses, obligations, red flags, missing protections, and explain everything in plain language.</p>
+    </div>
+  </div>
+</div>
+ 
+<!-- FIR MODAL -->
+<div class="overlay" id="firModal">
+  <div class="modal">
+    <div class="modal-hd"><h3>🧭 FIR Filing Assistant</h3><button class="m-close" onclick="closeModal('fir')">✕</button></div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:var(--t2);margin-bottom:1rem">Step-by-step guide to file an FIR correctly in India.</p>
+      <div class="fir-step"><div class="fir-num">1</div><div class="fir-content"><div class="fir-title">Describe what happened</div><div class="fir-body">Briefly describe the incident so I can identify the correct IPC/BNS sections to include in your FIR.</div><textarea class="fir-input" id="firDesc" rows="3" placeholder="e.g. My mobile phone was stolen at the bus stop on 15th March..."></textarea></div></div>
+      <div class="fir-step"><div class="fir-num">2</div><div class="fir-content"><div class="fir-title">Which police station?</div><div class="fir-body">FIR must be filed at the station having jurisdiction over the place where the incident occurred.</div><textarea class="fir-input" id="firPS" rows="1" placeholder="e.g. Anna Nagar Police Station, Chennai"></textarea></div></div>
+      <div class="fir-step"><div class="fir-num">3</div><div class="fir-content"><div class="fir-title">Your contact details</div><div class="fir-body">Name and phone number for the FIR record.</div><textarea class="fir-input" id="firContact" rows="1" placeholder="e.g. Ravi Kumar, 9876543210"></textarea></div></div>
+      <button class="modal-btn" onclick="generateFIR()">Generate FIR Draft →</button>
+    </div>
+  </div>
+</div>
+ 
+<script>
+let API_KEY='', lang='en', state='Tamil Nadu', area='Contract Law', mode='explain';
+let hist=[], sessionData={queries:0,docs:0,quiz:0,history:[]};
+let recognition=null, isListening=false;
+let selDoc='rent_agreement';
+let quizData=[], quizIdx=0, quizScore=0, quizAnswered=false;
+ 
+// ── KEY MANAGEMENT ──
+function submitKey(){
+  const v=document.getElementById('gateKey').value.trim();
+  const err=document.getElementById('gateErr');
+  if(!v.startsWith('sk-')||v.length<20){err.style.display='block';return;}
+  err.style.display='none';
+  API_KEY=v;
+  document.getElementById('gate').style.display='none';
+  document.getElementById('kdot').style.background='var(--green)';
+  document.getElementById('klabel').textContent=v.substring(0,12)+'…';
+  initQuiz();
+}
+function resetKey(){
+  API_KEY='';
+  document.getElementById('gateKey').value='';
+  document.getElementById('gate').style.display='flex';
+  document.getElementById('kdot').style.background='var(--red)';
+  document.getElementById('klabel').textContent='No Key';
+}
+ 
+// ── API ──
+// ── STREAMING API ──
+async function streamAPI(system, messages, onChunk){
+  if(!API_KEY){document.getElementById('gate').style.display='flex';throw new Error('No API key.');}
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:8192,stream:true,system,messages})
+  });
+  if(!r.ok){
+    const d=await r.json();
+    if(r.status===401){resetKey();throw new Error('Invalid API key.');}
+    if(r.status===429)throw new Error('Rate limit exceeded. Check console.anthropic.com.');
+    throw new Error(d?.error?.message||'API error '+r.status);
+  }
+  const reader=r.body.getReader();
+  const dec=new TextDecoder();
+  let full='', buf='';
+  while(true){
+    const {done,value}=await reader.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n');
+    buf=lines.pop();
+    for(const line of lines){
+      const t=line.trim();
+      if(!t.startsWith('data:')) continue;
+      const data=t.slice(5).trim();
+      if(!data||data==='[DONE]') continue;
+      try{
+        const ev=JSON.parse(data);
+        if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){
+          full+=ev.delta.text;
+          onChunk(full);
+        }
+        if(ev.type==='message_stop') return full;
+      }catch(e){}
+    }
+  }
+  return full;
+}
+ 
+// Non-streaming fallback for doc/FIR generation (needs full text at once)
+async function callAPI(system,messages){
+  if(!API_KEY){document.getElementById('gate').style.display='flex';throw new Error('No API key.');}
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:8192,system,messages})
+  });
+  const d=await r.json();
+  if(!r.ok){
+    if(r.status===401){resetKey();throw new Error('Invalid API key.');}
+    if(r.status===429)throw new Error('Rate limit exceeded. Check console.anthropic.com.');
+    throw new Error(d?.error?.message||'API error '+r.status);
+  }
+  return d.content[0].text;
+}
+ 
+// Create a streaming bubble — returns the raw text div
+function mkStreamBubble(){
+  const w=document.getElementById('welcome');if(w)w.remove();
+  const c=document.getElementById('msgs');
+  const wrap=document.createElement('div');wrap.className='msg ai';
+  const av=document.createElement('div');av.className='av ai';av.textContent='L';
+  const bub=document.createElement('div');bub.className='bub ai';
+  const raw=document.createElement('div');
+  raw.style.cssText='white-space:pre-wrap;font-size:13.5px;line-height:1.72;color:var(--t1)';
+  bub.appendChild(raw);wrap.appendChild(av);wrap.appendChild(bub);
+  c.appendChild(wrap);c.scrollTop=c.scrollHeight;
+  return {bub,raw,c};
+}
+ 
+// ── STATE ──
+function setLang(l){lang=l;document.getElementById('lEn').classList.toggle('active',l==='en');document.getElementById('lTa').classList.toggle('active',l==='ta');document.getElementById('tLang').textContent=l==='ta'?'தமிழ்':'English';}
+function setLoc(s){state=s;document.getElementById('tState').textContent=s;}
+function setArea(el,a){document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('on'));el.classList.add('on');area=a;document.getElementById('tArea').textContent=a;}
+function setMode(el,m){
+  document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('on'));el.classList.add('on');mode=m;
+  const L={explain:'Explain',scenario:'Scenario',xai:'Why This Law',rights:'Know Rights',risk:'Risk Predict',similar:'Similar Cases',simple:'Simplifier',lawyer:'Find Lawyer'};
+  document.getElementById('tMode').textContent=L[m]||m;
+  document.querySelectorAll('.mt').forEach(x=>x.classList.remove('on'));
+  const q=document.getElementById('qt-'+m);if(q)q.classList.add('on');
+}
+function qMode(el,m){setMode(document.getElementById('mb-'+m),m);}
+function showTab(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('panel-'+id).classList.add('on');
+  el.classList.add('on');
+}
+ 
+// ── SYSTEM PROMPT ──
+function buildSys(){
+  const langI=lang==='ta'?'Respond ENTIRELY in Tamil. Legal terms in English in brackets only. Simple everyday Tamil.':'Respond in English. If user wrote in Tamil, respond in Tamil.';
+  const modeI={
+    explain:'Explain fully with relevant Indian law sections. Use [LAWS] tag.',
+    scenario:'Use [SCENARIO] with a real comparable case and typical court outcome. Use [LAWS] tag.',
+    xai:'Use [WHY_LAW] to show exactly why each law logically applies. Use [LAWS] tag.',
+    rights:'Use [RIGHTS] for rights. [STEPS] for actions. [WARNING] for risks.',
+    risk:'Use [RISK_LEVEL] HIGH/MEDIUM/LOW with percentage estimate and reasoning. Use [STEPS] to mitigate. Use [LAWS] tag.',
+    similar:'Use [SIMILAR_CASE] for each comparable Indian court case with citation, facts, and outcome. Find at least 2-3 cases.',
+    simple:'Use [SIMPLE] to rewrite the law/section in plain language a 10-year-old can understand. Use analogies and examples.',
+    lawyer:'Suggest [LAWYER_TYPE] the user needs, what to tell them, and [STEPS] to find one. Include bar council contact.'
+  }[mode]||'Explain clearly.';
+  return `You are LexAI India v3, expert in Indian law. State: ${state}. Area: ${area}.
+${langI}
+Mode: ${modeI}
+Tags: [WHY_LAW] text | [SCENARIO] text | [RIGHTS] text | [STEPS] text | [WARNING] text | [LAWS] Act S.1, Act S.2 | [RISK_LEVEL] HIGH/MEDIUM/LOW — reason | [SIMILAR_CASE] Case name (Year) — facts — outcome | [SIMPLE] simplified text | [LAWYER_TYPE] type needed
+Cite: IPC/BNS 2023, CrPC/BNSS 2023, Consumer Protection Act 2019, RTI Act 2005, IT Act 2000, DPDP Act 2023, Transfer of Property Act, labour laws, ${state} state laws.
+IMPORTANT: Complete all answers fully. Never truncate.
+End with Key Takeaways — 3 bullet points.`;
+}
+ 
+// ── PARSE ──
+function mdi(t){return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;font-size:12px">$1</code>');}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+ 
+function parseRisk(text){
+  const m=text.match(/HIGH|MEDIUM|LOW/i);
+  if(!m)return`<div class="ls risk"><div class="ls-lbl">🎯 Risk Assessment</div><div class="ls-body">${mdi(text)}</div></div>`;
+  const lvl=m[0].toUpperCase();
+  const colors={HIGH:'var(--red)',MEDIUM:'var(--amber)',LOW:'var(--green)'};
+  const pcts={HIGH:75,MEDIUM:45,LOW:15};
+  const col=colors[lvl]||'var(--purple)';
+  const pct=pcts[lvl]||50;
+  return`<div class="ls risk"><div class="ls-lbl">🎯 Risk Assessment</div>
+    <div class="risk-meter"><div class="risk-bar"><div class="risk-fill" style="width:${pct}%;background:${col}"></div></div><span class="risk-label" style="color:${col}">${lvl}</span></div>
+    <div class="ls-body">${mdi(text.replace(/HIGH|MEDIUM|LOW/i,'').trim())}</div></div>`;
+}
+ 
+function parseSimilar(text){
+  const parts=text.match(/(.+?)\((\d{4})\)\s*[—-]\s*(.+?)\s*[—-]\s*(.+)/);
+  if(!parts)return`<div class="ls sim"><div class="ls-lbl">🔍 Similar Case</div><div class="ls-body">${mdi(text)}</div></div>`;
+  return`<div class="ls sim"><div class="ls-lbl">🔍 Similar Case</div>
+    <div class="ls-body"><strong style="color:var(--teal)">${parts[1].trim()} (${parts[2]})</strong><br>
+    <span style="color:var(--t2)">Facts:</span> ${mdi(parts[3].trim())}<br>
+    <span style="color:var(--t2)">Outcome:</span> ${mdi(parts[4].trim())}</div></div>`;
+}
+ 
+function parse(text){
+  let html='';const lines=text.split('\n');let inUl=false,inOl=false;
+  function closeL(){if(inUl){html+='</ul>';inUl=false;}if(inOl){html+='</ol>';inOl=false;}}
+  for(let i=0;i<lines.length;i++){
+    let line=lines[i].trim();
+    if(line.startsWith('[WHY_LAW]')){closeL();html+=`<div class="ls why"><div class="ls-lbl">⚖️ Why this law applies</div><div class="ls-body">${mdi(line.replace('[WHY_LAW]','').trim())}</div></div>`;continue;}
+    if(line.startsWith('[SCENARIO]')){closeL();html+=`<div class="ls scen"><div class="ls-lbl">🧠 Real-life scenario</div><div class="ls-body">${mdi(line.replace('[SCENARIO]','').trim())}</div></div>`;continue;}
+    if(line.startsWith('[RIGHTS]')){closeL();html+=`<div class="ls rts"><div class="ls-lbl">✅ Your rights</div><div class="ls-body">${mdi(line.replace('[RIGHTS]','').trim())}</div></div>`;continue;}
+    if(line.startsWith('[STEPS]')){closeL();html+=`<div class="ls stps"><div class="ls-lbl">📋 Steps to take</div><div class="ls-body">${mdi(line.replace('[STEPS]','').trim())}</div></div>`;continue;}
+    if(line.startsWith('[WARNING]')){closeL();html+=`<div class="ls wrn"><div class="ls-lbl">⚠️ Important warning</div><div class="ls-body">${mdi(line.replace('[WARNING]','').trim())}</div></div>`;continue;}
+    if(line.startsWith('[RISK_LEVEL]')){closeL();html+=parseRisk(line.replace('[RISK_LEVEL]','').trim());continue;}
+    if(line.startsWith('[SIMILAR_CASE]')){closeL();html+=parseSimilar(line.replace('[SIMILAR_CASE]','').trim());continue;}
+    if(line.startsWith('[SIMPLE]')){closeL();html+=`<div class="ls rts"><div class="ls-lbl">📖 In plain language</div><div class="ls-body">${mdi(line.replace('[SIMPLE]','').trim())}</div></div>`;continue;}
+    if(line.startsWith('[LAWYER_TYPE]')){closeL();html+=`<div class="ls scen"><div class="ls-lbl">🧑‍⚖️ Lawyer guidance</div><div class="ls-body">${mdi(line.replace('[LAWYER_TYPE]','').trim())}</div></div>`;continue;}
+    if(line.startsWith('[LAWS]')){closeL();const tags=line.replace('[LAWS]','').trim();html+=`<div class="tag-row">${tags.split(',').map(t=>`<span class="law-tag">${t.trim()}</span>`).join('')}</div>`;continue;}
+    if(line.match(/^#{1,3}\s+/)){closeL();html+=`<p style="font-weight:500;color:var(--gold);margin:.65rem 0 .3rem;font-size:13.5px">${mdi(line.replace(/^#+\s+/,''))}</p>`;continue;}
+    const ulM=line.match(/^[-•*]\s+(.*)/);const olM=line.match(/^\d+\.\s+(.*)/);
+    if(ulM){if(inOl){html+='</ol>';inOl=false;}if(!inUl){html+='<ul>';inUl=true;}html+=`<li>${mdi(ulM[1])}</li>`;continue;}
+    if(olM){if(inUl){html+='</ul>';inUl=false;}if(!inOl){html+='<ol>';inOl=true;}html+=`<li>${mdi(olM[1])}</li>`;continue;}
+    closeL();if(line)html+=`<p>${mdi(line)}</p>`;
+  }
+  closeL();
+  html+=`<div class="disc">General legal info under Indian law · ${state}. Consult a licensed advocate for personalised advice.</div>`;
+  return html;
+}
+ 
+// ── MESSAGES ──
+function addUser(text){
+  const w=document.getElementById('welcome');if(w)w.remove();
+  const c=document.getElementById('msgs');
+  const m=document.createElement('div');m.className='msg usr';
+  m.innerHTML=`<div class="av usr">You</div><div class="bub usr">${esc(text)}</div>`;
+  c.appendChild(m);c.scrollTop=c.scrollHeight;
+}
+function addAI(text){
+  const c=document.getElementById('msgs');
+  const m=document.createElement('div');m.className='msg ai';
+  m.innerHTML=`<div class="av ai">L</div><div class="bub ai">${parse(text)}</div>`;
+  c.appendChild(m);c.scrollTop=c.scrollHeight;
+}
+function addDocMsg(text,name){
+  const c=document.getElementById('msgs');
+  const m=document.createElement('div');m.className='msg ai';
+  m.innerHTML=`<div class="av ai">L</div><div class="bub ai">
+    <p style="font-size:11.5px;color:var(--t2);margin-bottom:.5rem">Template · ${esc(state)}</p>
+    <div class="doc-prev"><div class="doc-hd"><span class="doc-t">📄 ${esc(name)}</span><button class="cp-btn" onclick="cpDoc(this)">Copy</button></div><div class="doc-bd">${esc(text)}</div></div>
+    <div class="disc">Template only — review with a licensed advocate before execution.</div></div>`;
+  c.appendChild(m);c.scrollTop=c.scrollHeight;
+}
+function cpDoc(btn){const el=btn.closest('.doc-prev').querySelector('.doc-bd');navigator.clipboard.writeText(el.textContent);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);}
+function showTyping(){
+  const c=document.getElementById('msgs');
+  const w=document.createElement('div');w.className='msg ai';w.id='tw';
+  w.innerHTML=`<div class="av ai">L</div><div class="bub ai"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  c.appendChild(w);c.scrollTop=c.scrollHeight;
+}
+function rmTyping(){const e=document.getElementById('tw');if(e)e.remove();}
+function clearChat(){hist=[];const c=document.getElementById('msgs');c.innerHTML='<div class="welcome" id="welcome"><div class="w-seal"><svg width="21" height="21" viewBox="0 0 22 22" fill="none"><path d="M11 1.5L2 6v4.5c0 4.9 3.5 9.5 9 10.75C16.5 20 20 15.4 20 10.5V6L11 1.5z" stroke="#C9A84C" stroke-width="1.1" fill="rgba(201,168,76,0.08)"/><path d="M7.5 11l2.5 2.5 4.5-4.5" stroke="#C9A84C" stroke-width="1.1" stroke-linecap="round"/></svg></div><h2 style="font-family:\'Playfair Display\',serif;font-size:18px;margin-bottom:.4rem">Chat cleared</h2><p style="font-size:13px;color:var(--t2)">Start a new query below.</p></div>';}
+ 
+// ── SEND ──
+function useP(t){document.getElementById('inp').value=t;autoH(document.getElementById('inp'));send();}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+ 
+async function send(){
+  const inp=document.getElementById('inp');
+  const text=inp.value.trim();if(!text)return;
+  const btn=document.getElementById('sendBtn');
+  btn.disabled=true;inp.value='';inp.style.height='auto';
+  addUser(text);hist.push({role:'user',content:text});
+  sessionData.queries++;sessionData.history.unshift({q:text,area,mode,time:new Date().toLocaleTimeString()});
+  updateDash();
+  const {bub,raw,c}=mkStreamBubble();
+  raw.textContent='▋';
+  try{
+    let full='';
+    await streamAPI(buildSys(),hist,(acc)=>{
+      full=acc;raw.textContent=acc+'▋';c.scrollTop=c.scrollHeight;
+    });
+    bub.innerHTML=parse(full);
+    hist.push({role:'assistant',content:full});
+  }catch(e){
+    bub.innerHTML='<p style="color:var(--red)">⚠️ '+e.message+'</p>';
+  }
+  c.scrollTop=c.scrollHeight;
+  btn.disabled=false;inp.focus();
+}
+ 
+// ── DOCUMENT ──
+function openModal(id){document.getElementById(id+'Modal').classList.add('open');}
+function closeModal(id){document.getElementById(id+'Modal').classList.remove('open');}
+function pickDoc(el,t){document.querySelectorAll('.dtc').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');selDoc=t;}
+async function genDoc(){
+  closeModal('doc');
+  const names={rent_agreement:'Residential Rent Agreement (11-Month)',nda:'Non-Disclosure Agreement',legal_notice:'Legal Notice',employment_offer:'Employment Offer Letter',affidavit:'General Affidavit',consumer_complaint:'Consumer Complaint – District Consumer Forum'};
+  const name=names[selDoc];
+  addUser('Generate a '+name+' under Indian law ('+state+')');
+  const userMsg='Generate a complete professional '+name+' template for '+state+', India. Include all clauses, [FIELD] placeholders, applicable Indian acts, and DOCUMENT NOTES (stamp duty, registration, execution for '+state+'). Start directly with the document.';
+  showTyping();
+  const sys='You are LexAI India, legal document specialist. Generate complete Indian legal templates. Mark fields as [FIELD_NAME]. Add DOCUMENT NOTES at end: governing laws, stamp duty for '+state+', registration, witnesses, notarization. No preamble.';
+  try{
+    const txt=await callAPI(sys,[{role:'user',content:userMsg}]);
+    rmTyping();hist.push({role:'user',content:userMsg});hist.push({role:'assistant',content:txt});
+    sessionData.docs++;updateDash();addDocMsg(txt,name);
+  }catch(e){rmTyping();addAI('⚠️ '+e.message);}
+}
+ 
+// ── DOCUMENT SCANNER ──
+function handleFileUpload(input){
+  const file=input.files[0];if(!file)return;
+  const status=document.getElementById('scanStatus');
+  status.textContent='Reading file: '+file.name+'…';
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    closeModal('scan');
+    addUser('Analyze this document: '+file.name);
+    showTyping();
+    try{
+      const b64=e.target.result.split(',')[1];
+      const isImg=file.type.startsWith('image/');
+      const msgs=isImg?[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:'Analyze this legal document. Identify: 1) Document type 2) Key clauses and obligations 3) Red flags or unfair terms 4) Missing protections 5) Explain each point in plain language. Use [WARNING] for red flags, [RIGHTS] for user protections, [STEPS] for recommended actions.'}]}]:[{role:'user',content:'Analyze this legal document and explain: 1) Document type 2) Key clauses 3) Red flags 4) Missing protections 5) Plain language summary. Use [WARNING] [RIGHTS] [STEPS] tags.'}];
+      const sys='You are LexAI India, expert legal document analyzer under Indian law. Analyze uploaded legal documents and explain them clearly to non-lawyers. Flag problematic clauses, missing protections, and advise on next steps.';
+      const reply=await callAPI(sys,msgs);
+      rmTyping();hist.push({role:'assistant',content:reply});addAI(reply);
+    }catch(e){rmTyping();addAI('⚠️ '+e.message);}
+  };
+  reader.readAsDataURL(file);
+}
+ 
+// ── FIR GUIDE ──
+async function generateFIR(){
+  const desc=document.getElementById('firDesc').value.trim();
+  const ps=document.getElementById('firPS').value.trim();
+  const contact=document.getElementById('firContact').value.trim();
+  if(!desc){alert('Please describe the incident.');return;}
+  closeModal('fir');
+  addUser('Generate FIR draft: '+desc.substring(0,80)+'…');
+  showTyping();
+  const sys='You are LexAI India, expert in Indian criminal law (BNS 2023, BNSS 2023). Generate a complete FIR draft with correct section numbers, format, and step-by-step filing instructions.';
+  const userMsg=`Generate a complete FIR (First Information Report) draft for the following:\n\nIncident: ${desc}\nPolice Station: ${ps||'[Police Station Name]'}\nComplainant: ${contact||'[Your Name & Phone]'}\nState: ${state}\n\nInclude:\n1. The exact FIR draft in proper format\n2. Applicable BNS/IPC sections with names\n3. Step-by-step instructions to file it\n4. What to do if police refuse to register\n5. [STEPS] for follow-up after filing\n6. [WARNING] for common mistakes to avoid`;
+  try{
+    const reply=await callAPI(sys,[{role:'user',content:userMsg}]);
+    rmTyping();hist.push({role:'user',content:userMsg});hist.push({role:'assistant',content:reply});addAI(reply);
+  }catch(e){rmTyping();addAI('⚠️ '+e.message);}
+}
+ 
+// ── VOICE INPUT ──
+function setVoiceStatus(msg, cls){
+  const st = document.getElementById('voiceSt');
+  if(!msg){st.className='voice-status';st.textContent='';return;}
+  st.className='voice-status show'+(cls?' '+cls:'');
+  st.textContent=msg;
+}
+ 
+function toggleVoice(){
+  const btn=document.getElementById('voiceBtn');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ 
+  if(!SR){
+    btn.classList.add('unsupported');
+    setVoiceStatus('Not supported — use Chrome','error');
+    setTimeout(()=>setVoiceStatus(''),3000);
+    return;
+  }
+ 
+  // Stop if already listening
+  if(isListening){
+    if(recognition) recognition.stop();
+    isListening=false;
+    btn.classList.remove('listening');
+    setVoiceStatus('');
+    return;
+  }
+ 
+  // Request mic permission explicitly first
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    // Stop the stream immediately — we just needed permission
+    stream.getTracks().forEach(t=>t.stop());
+ 
+    recognition = new SR();
+    recognition.lang = lang==='ta' ? 'ta-IN' : 'en-IN';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+ 
+    recognition.onstart = ()=>{
+      isListening=true;
+      btn.classList.add('listening');
+      setVoiceStatus(lang==='ta'?'கேட்கிறேன்…':'Listening…','active');
+    };
+ 
+    recognition.onresult = (e)=>{
+      let interim='', final='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+        else interim+=e.results[i][0].transcript;
+      }
+      const inp=document.getElementById('inp');
+      inp.value = final || interim;
+      autoH(inp);
+      if(interim) setVoiceStatus((lang==='ta'?'கேட்கிறேன்: ':'Heard: ')+interim.substring(0,30)+'…','active');
+    };
+ 
+    recognition.onend = ()=>{
+      isListening=false;
+      btn.classList.remove('listening');
+      const val=document.getElementById('inp').value.trim();
+      if(val){
+        setVoiceStatus(lang==='ta'?'அனுப்புகிறேன்…':'Sending…');
+        setTimeout(()=>{setVoiceStatus('');send();},400);
+      } else {
+        setVoiceStatus(lang==='ta'?'ஒலி கிடைக்கவில்லை':'Nothing heard');
+        setTimeout(()=>setVoiceStatus(''),2500);
+      }
+    };
+ 
+    recognition.onerror = (e)=>{
+      isListening=false;
+      btn.classList.remove('listening');
+      const msgs={
+        'not-allowed':'Mic blocked — allow microphone in browser settings',
+        'no-speech': lang==='ta'?'ஒலி கிடைக்கவில்லை, மீண்டும் முயற்சி':'No speech detected, try again',
+        'network':   'Network error — check connection',
+        'aborted':   '',
+      };
+      const msg=msgs[e.error]||'Error: '+e.error;
+      if(msg) setVoiceStatus(msg,'error');
+      setTimeout(()=>setVoiceStatus(''),3500);
+    };
+ 
+    recognition.start();
+ 
+  }).catch(err=>{
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
+      setVoiceStatus('Microphone blocked — click 🔒 in address bar to allow','error');
+    } else {
+      setVoiceStatus('Mic error: '+err.message,'error');
+    }
+    setTimeout(()=>setVoiceStatus(''),4000);
+  });
+}
+ 
+// ── DASHBOARD ──
+function updateDash(){
+  document.getElementById('dQueries').textContent=sessionData.queries;
+  document.getElementById('dDocs').textContent=sessionData.docs;
+  document.getElementById('dQuiz').textContent=sessionData.quiz;
+  const list=document.getElementById('histList');
+  if(!sessionData.history.length){list.innerHTML='<p style="font-size:13px;color:var(--t3)">No queries yet.</p>';return;}
+  list.innerHTML=sessionData.history.slice(0,10).map(h=>`<div class="hist-item" onclick="reuseQuery('${esc(h.q).replace(/'/g,"\\'")}')">
+    <div class="hist-icon">⚖️</div>
+    <div><div class="hist-q">${esc(h.q.substring(0,80))}${h.q.length>80?'…':''}</div>
+    <div class="hist-meta">${h.area} · ${h.mode} · ${h.time}</div></div></div>`).join('');
+}
+function reuseQuery(q){showTab('chat',document.querySelector('.tab'));document.getElementById('inp').value=q;autoH(document.getElementById('inp'));}
+ 
+// ── QUIZ ──
+const quizBank=[
+  {q:'Under which act can you file a complaint for receiving a defective product online?',opts:['IT Act 2000','Consumer Protection Act 2019','Indian Contract Act 1872','Transfer of Property Act'],ans:1,exp:'The Consumer Protection Act 2019 covers e-commerce purchases and gives you the right to replacement, refund, or compensation for defective products.'},
+  {q:'What is the time limit to file a consumer complaint in the District Consumer Forum?',opts:['1 year','2 years','3 years','5 years'],ans:1,exp:'Under Consumer Protection Act 2019, complaints must be filed within 2 years from the date the cause of action arose.'},
+  {q:'Which IPC section (now BNS) deals with criminal intimidation / threatening someone?',opts:['Section 354','Section 420','Section 503','Section 498A'],ans:2,exp:'IPC Section 503 (BNS equivalent: S.351) covers criminal intimidation — threatening someone with injury to cause alarm.'},
+  {q:'What is the minimum period of service for gratuity eligibility in India?',opts:['3 years','4 years','5 years','7 years'],ans:2,exp:'Under the Payment of Gratuity Act 1972, an employee must complete 5 years of continuous service to be eligible for gratuity.'},
+  {q:'Under RTI Act 2005, within how many days must a Public Information Officer respond?',opts:['15 days','30 days','45 days','60 days'],ans:1,exp:'Under RTI Act 2005, the PIO must provide information within 30 days of receiving the application (or 48 hours if life/liberty is involved).'},
+  {q:'Which law replaced the IPC (Indian Penal Code) from July 1, 2024?',opts:['BNSS 2023','BNS 2023','CrPC 2023','BSA 2023'],ans:1,exp:'The Bharatiya Nyaya Sanhita (BNS) 2023 replaced the IPC 1860 from July 1, 2024. The BNSS replaced CrPC, and BSA replaced the Indian Evidence Act.'},
+  {q:'Under IT Act 2000, sharing private/intimate images of a person without consent is punishable under which section?',opts:['Section 43','Section 66','Section 66E','Section 67A'],ans:2,exp:'Section 66E of the IT Act specifically criminalises publishing or transmitting private images without consent — up to 3 years and ₹2 lakh fine.'},
+  {q:'What is the stamp duty rate for an 11-month rental agreement in Tamil Nadu?',opts:['0.5% of annual rent','1% of annual rent','Fixed ₹20','Fixed ₹500'],ans:2,exp:'For agreements up to 11 months, Tamil Nadu charges a fixed stamp duty of ₹20. Agreements over 1 year must be registered and attract higher stamp duty.'},
+  {q:'Under RERA, builders must complete projects within how many years of the sanctioned date (extendable)?',opts:['2 years','3 years','5 years','As per agreement'],ans:3,exp:'Under RERA 2016, the project must be completed as per the date declared at registration. Extensions can be given for force majeure events. The agreement date governs.'},
+  {q:'Which fundamental right protects Indian citizens from arbitrary arrest?',opts:['Article 19','Article 21','Article 22','Article 14'],ans:2,exp:'Article 22 of the Constitution protects against arbitrary arrest — you must be informed of the grounds, have access to a lawyer, and be produced before a magistrate within 24 hours.'},
+];
+ 
+function initQuiz(){quizData=[...quizBank].sort(()=>Math.random()-.5).slice(0,7);quizIdx=0;quizScore=0;quizAnswered=false;renderQuiz();}
+function renderQuiz(){
+  const c=document.getElementById('quizContent');
+  if(quizIdx>=quizData.length){
+    const pct=Math.round((quizScore/quizData.length)*100);
+    c.innerHTML=`<div style="text-align:center;padding:2rem">
+      <div style="font-size:40px;margin-bottom:1rem">${pct>=70?'🏆':pct>=50?'👍':'📚'}</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin-bottom:.5rem">Quiz Complete!</h2>
+      <p style="font-size:15px;color:var(--t2);margin-bottom:1.5rem">You scored <strong style="color:var(--gold)">${quizScore}/${quizData.length}</strong> (${pct}%)</p>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:1.5rem">${pct>=70?'Excellent! You have strong legal awareness.':pct>=50?'Good effort! Keep learning your rights.':'Keep exploring LexAI to build your legal knowledge.'}</p>
+      <button class="qp-next" onclick="initQuiz()">Try Again →</button></div>`;
+    sessionData.quiz+=quizData.length;updateDash();return;
+  }
+  const q=quizData[quizIdx];
+  const prog=((quizIdx/quizData.length)*100).toFixed(0);
+  c.innerHTML=`<div class="qp-header"><span class="qp-score">Score: <span>${quizScore}/${quizIdx}</span></span><span style="font-size:12px;color:var(--t3)">${quizIdx+1} of ${quizData.length}</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${prog}%"></div></div>
+    <div class="qp-card">
+      <div class="qp-num">Question ${quizIdx+1}</div>
+      <div class="qp-q">${q.q}</div>
+      <div class="qp-opts">${q.opts.map((o,i)=>`<button class="qp-opt" onclick="answerQuiz(${i})">${o}</button>`).join('')}</div>
+      <div id="qExp" style="display:none" class="qp-exp"></div>
+      <button class="qp-next" id="qNext" style="display:none" onclick="nextQ()">Next Question →</button>
+    </div>`;
+  quizAnswered=false;
+}
+function answerQuiz(i){
+  if(quizAnswered)return;quizAnswered=true;
+  const q=quizData[quizIdx];
+  const opts=document.querySelectorAll('.qp-opt');
+  opts.forEach((o,idx)=>{o.disabled=true;if(idx===q.ans)o.classList.add('c');else if(idx===i)o.classList.add('w');});
+  if(i===q.ans)quizScore++;
+  document.getElementById('qExp').style.display='block';
+  document.getElementById('qExp').textContent=q.exp;
+  document.getElementById('qNext').style.display='block';
+}
+function nextQ(){quizIdx++;quizAnswered=false;renderQuiz();}
+</script>
+</body>
+</html>
